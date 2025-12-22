@@ -42,6 +42,7 @@ class HomeActivity : AppCompatActivity() {
                 Toast.makeText(this, "No campaigns found", Toast.LENGTH_SHORT).show() [cite: 126]
             }
             // Logic to update your RecyclerView Adapter goes here
+            //logic needs to add here
         }
     }
 }
