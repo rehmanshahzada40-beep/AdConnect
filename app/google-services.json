@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "96565385366",
+    "project_id": "adconnect-c97bb",
+    "storage_bucket": "adconnect-c97bb.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:96565385366:android:7784acf0443e4282760ab7",
+        "android_client_info": {
+          "package_name": "com.example.adconnect"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB7vleOSUVE1w6FTTM4Z1EAxoxQzJJgFDc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
