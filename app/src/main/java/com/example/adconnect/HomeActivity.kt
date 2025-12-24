@@ -14,6 +14,7 @@ import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
 
 class HomeActivity : AppCompatActivity() {
+
     private lateinit var binding: ActivityHomeBinding
     private val db = FirebaseFirestore.getInstance()
     private val auth = FirebaseAuth.getInstance()
@@ -23,41 +24,54 @@ class HomeActivity : AppCompatActivity() {
         binding = ActivityHomeBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
+        // Setup RecyclerView
         binding.rvCampaigns.layoutManager = LinearLayoutManager(this)
 
+        // Run logic
         setupRoleBasedUI()
         loadAdCampaigns()
 
+        // Setup Create Button
         binding.fabCreate.setOnClickListener {
             startActivity(Intent(this, CreateCampaignActivity::class.java))
         }
     }
 
-    // Hide FAB if user is a Publisher
     private fun setupRoleBasedUI() {
         val uid = auth.currentUser?.uid ?: return
-        db.collection("Users").document(uid).get().addOnSuccessListener {
-            val role = it.getString("role")
-            if (role == "Advertiser") {
-                binding.fabCreate.visibility = View.VISIBLE
-            } else {
-                binding.fabCreate.visibility = View.GONE
+
+        db.collection("Users").document(uid).get()
+            .addOnSuccessListener { document ->
+                if (document.exists()) {
+                    val role = document.getString("role")
+                    if (role == "Advertiser") {
+                        binding.fabCreate.visibility = View.VISIBLE
+                    } else {
+                        binding.fabCreate.visibility = View.GONE
+                    }
+                }
             }
-        }
+            .addOnFailureListener {
+                Toast.makeText(this, "Failed to fetch role", Toast.LENGTH_SHORT).show()
+            }
     }
 
-    // Use Case 2: Publisher Views Ads [cite: 808]
     private fun loadAdCampaigns() {
         db.collection("Campaigns")
             .orderBy("timestamp", Query.Direction.DESCENDING)
             .addSnapshotListener { value, error ->
-                if (error != null) return@addSnapshotListener
+                if (error != null) {
+                    Toast.makeText(this, "Error: ${error.message}", Toast.LENGTH_SHORT).show()
+                    return@addSnapshotListener
+                }
 
-                val campaigns = value?.toObjects(Campaign::class.java) ?: emptyList()
-                binding.rvCampaigns.adapter = CampaignAdapter(campaigns)
+                if (value != null) {
+                    val campaigns = value.toObjects(Campaign::class.java)
+                    binding.rvCampaigns.adapter = CampaignAdapter(campaigns)
 
-                if (campaigns.isEmpty()) {
-                    Toast.makeText(this, "No active ads found", Toast.LENGTH_SHORT).show()
+                    if (campaigns.isEmpty()) {
+                        Toast.makeText(this, "No active ads found", Toast.LENGTH_SHORT).show()
+                    }
                 }
             }
     }
