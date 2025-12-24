@@ -43,6 +43,14 @@ android {
 
 dependencies {
 
+    // FIREBASE (Existing + New)
+    implementation(libs.firebase.auth)
+    implementation(libs.firebase.firestore.ktx)
+    implementation("com.google.firebase:firebase-storage-ktx:20.3.0") // ADDED: For Ad Images
+
+    // UI HELPER
+    implementation("com.github.bumptech.glide:glide:4.16.0")
+    
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)
     implementation(libs.material)

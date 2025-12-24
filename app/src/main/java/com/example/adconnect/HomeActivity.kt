@@ -1,48 +1,64 @@
 package com.example.adconnect
 
+import android.content.Intent
 import android.os.Bundle
+import android.view.View
 import android.widget.Toast
-import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.view.ViewCompat
-import androidx.core.view.WindowInsetsCompat
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.example.adconnect.adapter.CampaignAdapter
 import com.example.adconnect.databinding.ActivityHomeBinding
+import com.example.adconnect.model.Campaign
+import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.Query
 
 class HomeActivity : AppCompatActivity() {
     private lateinit var binding: ActivityHomeBinding
     private val db = FirebaseFirestore.getInstance()
+    private val auth = FirebaseAuth.getInstance()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityHomeBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        // Setup UI
         binding.rvCampaigns.layoutManager = LinearLayoutManager(this)
 
-        // Load Data from Firestore (SRS Section 3.2.4)
+        setupRoleBasedUI()
         loadAdCampaigns()
 
         binding.fabCreate.setOnClickListener {
-            // Navigate to Create Campaign screen (Use Case 1)
+            startActivity(Intent(this, CreateCampaignActivity::class.java))
         }
     }
 
-    private fun loadAdCampaigns() {
-        db.collection("Campaigns").addSnapshotListener { value, error ->
-            if (error != null) {
-                Toast.makeText(this, "Connection Error", Toast.LENGTH_SHORT).show()
-                return@addSnapshotListener
+    // Hide FAB if user is a Publisher
+    private fun setupRoleBasedUI() {
+        val uid = auth.currentUser?.uid ?: return
+        db.collection("Users").document(uid).get().addOnSuccessListener {
+            val role = it.getString("role")
+            if (role == "Advertiser") {
+                binding.fabCreate.visibility = View.VISIBLE
+            } else {
+                binding.fabCreate.visibility = View.GONE
             }
-
-            val campaigns = value?.toObjects(Campaign::class.java) ?: emptyList()
-            if (campaigns.isEmpty()) {
-                Toast.makeText(this, "No campaigns found", Toast.LENGTH_SHORT).show() [cite: 126]
-            }
-            // Logic to update your RecyclerView Adapter goes here
-            //logic needs to add here
         }
+    }
+
+    // Use Case 2: Publisher Views Ads [cite: 808]
+    private fun loadAdCampaigns() {
+        db.collection("Campaigns")
+            .orderBy("timestamp", Query.Direction.DESCENDING)
+            .addSnapshotListener { value, error ->
+                if (error != null) return@addSnapshotListener
+
+                val campaigns = value?.toObjects(Campaign::class.java) ?: emptyList()
+                binding.rvCampaigns.adapter = CampaignAdapter(campaigns)
+
+                if (campaigns.isEmpty()) {
+                    Toast.makeText(this, "No active ads found", Toast.LENGTH_SHORT).show()
+                }
+            }
     }
 }
